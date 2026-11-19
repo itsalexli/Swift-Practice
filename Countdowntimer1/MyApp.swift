@@ -4,7 +4,7 @@ import SwiftUI
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                NavigationLink("Start") {CountDownView()}
+                HomeView()
             }
         }
     }

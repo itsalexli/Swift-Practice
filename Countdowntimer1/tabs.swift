@@ -103,7 +103,7 @@ struct CarouselView: View {
             }
         }
         .task(id: shouldScroll) {
-            guard shouldScroll else { return }  
+            guard shouldScroll else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(2))
                 if Task.isCancelled {break}

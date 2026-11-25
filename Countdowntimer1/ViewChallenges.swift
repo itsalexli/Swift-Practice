@@ -192,13 +192,102 @@ struct BuySell: View {
 //How the pieces connect (all from Part 3 and the views reference):
 //
 //The @State var darkCharts = false lives on the main screen, because it needs to show the value.
+
 //SettingsView receives it as @Binding var darkCharts: Bool, and the main screen passes it in with $darkCharts. The toggle inside the sheet then changes the main screen's value.
 //To show the sheet: a second @State Bool (showSettings) + .sheet(isPresented: $showSettings) { SettingsView(darkCharts: $darkCharts) }.
 //To close it from inside: @Environment(\.dismiss) private var dismiss, then dismiss() in the Done button.
 //
 //Check that: you open the sheet → flip the toggle → tap Done → the main screen shows the new value. Swiping the sheet down should also close it.
 
+struct Settings: View {
+    @State private var dark: Bool = true
+    @State private var showSettings: Bool = false
+    var body: some View {
+        VStack {
+            Text(dark ? "Dark charts: On" : "Dark charts: Off")
+            Button { showSettings = true } label: {
+                Image(systemName: "gear")
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(dark: $dark)
+        }
+    }
+}
+
+struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var dark: Bool
+    var body: some View {
+        VStack {
+            Toggle("Dark charts", isOn: $dark)
+            Button("Done") {dismiss()}
+                .buttonStyle(.borderedProminent)
+        }
+    }
+}
+
+
+
+struct editWatch: View {
+    @State private var tickers = ["HOOD", "AAPL"]
+    @State private var newTicker = ""
+    var body: some View {
+        VStack {
+            HStack {
+                TextField("New ticker", text: $newTicker)
+                Button("Add") {
+                    if !newTicker.isEmpty && !tickers.contains(newTicker){
+                        tickers.append(newTicker.uppercased())
+                        newTicker = ""
+                    }
+                }.disabled(newTicker.isEmpty)
+            }
+            List {
+                ForEach(tickers, id: \.self) { ticker in
+                    Text(ticker)
+                }
+                .onDelete { offsets in
+                    tickers.remove(atOffsets: offsets)
+                }
+            }
+        }
+
+    }
+}
+
+
+struct StockChips: View {
+    let tickers = ["HOOD", "AAPL", "NVDA", "TSLA", "MSFT", "AMZN", "GOOG", "META"]
+    @State private var selectedTicker: String = "HOOD"
+    
+    var body: some View {
+        VStack {
+            ScrollView (.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach(tickers, id: \.self) { ticker in
+                        let isSelected = ticker == selectedTicker
+                        Text(ticker)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(isSelected ? .green : Color.gray.opacity(0.6) ))
+                            .onTapGesture {
+                                selectedTicker = ticker
+                            }
+                    }
+                }
+                .padding()
+            }
+            Text("Selected: \(selectedTicker)")
+                .fontWeight(.bold)
+                .padding(.top, 50)
+                
+        }
+    }
+}
+
 
 #Preview {
-   BuySell()
+    StockChips()
 }

@@ -72,7 +72,7 @@
 //        .onTapGesture {
 //            timer.togglePause()
 //            
-//            
+//
 //        }
 //    }
 //}
@@ -93,23 +93,73 @@
 
 import SwiftUI
 
-struct TimerListView: View {
-    var body: some View {
-    }
-}
-
-}
 @MainActor
 @Observable
-final class TimerItem {
+final class TimerItem: Identifiable{
+    let id: Int
+    var time: Double
+    var isRunning: Bool
     
+    init(id: Int) {
+        self.id = id
+        self.time = 0.0
+        self.isRunning = true
+    }
+    
+    func tick() async{
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(100))
+            guard !Task.isCancelled else {return}
+            time += 0.1        }
+    }
+    
+    func togglePause() {
+        isRunning.toggle()
+    }
 }
 
-
 struct TimerRow: View {
+    @Environment(\.scenePhase) private var scenePhase
+    let timer: TimerItem
     var body: some View {
-        /*@START_MENU_TOKEN@*//*@PLACEHOLDER=Hello, world!@*/Text("Hello, world!")/*@END_MENU_TOKEN@*/
+        HStack {
+            Text("Timer \(timer.id)").font(.title3).bold()
+            Spacer()
+            Text(timer.time, format: .number.precision(.fractionLength(1)))
+                .font(.title3).bold()
+                .monospacedDigit()
+        }
+        .padding()
+        .contentShape(Rectangle())
+        .task (id: timer.isRunning && scenePhase == .active){
+            guard timer.isRunning, scenePhase == .active else {return}
+            await timer.tick()
+        }
+        .onTapGesture {
+            timer.togglePause()
+        }
     }
+}
+
+struct TimerListView: View {
+    @State private var tm = TimerModel()
+    var body: some View {
+        VStack {
+            Text("Timer Lists").font(.title).bold().padding()
+            List {
+                ForEach(tm.timerArr) { timer in
+                    TimerRow(timer: timer)
+                }
+            }
+            
+        }
+    }
+}
+
+@MainActor
+@Observable
+final class TimerModel {
+    let timerArr: [TimerItem] = (1...50).map { TimerItem(id: $0)}
 }
 #Preview {
     TimerListView()
